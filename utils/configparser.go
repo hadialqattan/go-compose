@@ -13,11 +13,11 @@ import (
 
 // Service is a struct that represents the service in the YAML file.
 type Service struct {
-	Cwd      string                 `yaml:"cwd"`
-	Command  string                 `yaml:"command"`
-	Order    []interface{}          `yaml:"order"`
-	Hooks    map[string][]string    `yaml:"hooks"`
-	Environs map[string]interface{} `yaml:"environs"`
+	Cwd      string              `yaml:"cwd"`
+	Command  string              `yaml:"command"`
+	Order    []interface{}       `yaml:"order"`
+	Hooks    map[string][]string `yaml:"hooks"`
+	Environs map[string]string   `yaml:"environs"`
 }
 
 // ParseConfigFile is a function that parses the given `filepath` configs.
