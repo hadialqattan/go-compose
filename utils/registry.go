@@ -29,7 +29,7 @@ func createRegistry() *registry {
 		running:      map[string]*process{},
 		stopped:      map[string]*process{},
 		permitToKill: goset.NewSet(),
-		logger:       logrus.New(),
+		logger:       newCustomLogger(),
 	}
 }
 
