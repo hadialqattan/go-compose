@@ -23,7 +23,7 @@ type registry struct {
 	logger *logrus.Logger
 }
 
-func initRegistry() *registry {
+func createRegistry() *registry {
 	return &registry{
 		ready:        map[string]*process{},
 		running:      map[string]*process{},
@@ -38,8 +38,8 @@ func (reg *registry) register(proc *process) {
 	reg.Lock()
 	defer reg.Unlock()
 
-	reg.ready[proc.Name] = proc
-	for _, procName := range proc.Service.Hooks["kill"] {
+	reg.ready[proc.name] = proc
+	for _, procName := range proc.service.hooks["kill"] {
 		reg.permitToKill.Add(procName)
 	}
 }
@@ -48,11 +48,11 @@ func (reg *registry) updateStatus(proc *process, status string) {
 	reg.Lock()
 	switch status {
 	case "running":
-		delete(reg.ready, proc.Name)
-		reg.running[proc.Name] = proc
+		delete(reg.ready, proc.name)
+		reg.running[proc.name] = proc
 	case "stopped":
-		delete(reg.running, proc.Name)
-		reg.stopped[proc.Name] = proc
+		delete(reg.running, proc.name)
+		reg.stopped[proc.name] = proc
 	default:
 		panic("WTF are you doing?! Unknown process!")
 	}
@@ -103,6 +103,10 @@ func (reg *registry) getProcess(name string) (*process, string) {
 		return proc, "stopped"
 	}
 	panic("WTF are you doing?! Unknown process!")
+}
+
+func (reg *registry) len() int {
+	return len(reg.getProcesses())
 }
 
 func (reg *registry) getProcesses() []*process {

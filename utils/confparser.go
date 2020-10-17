@@ -10,41 +10,26 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 	"mvdan.cc/sh/v3/syntax"
 )
 
-type service struct {
-	IgnoreFailures bool                `yaml:"isolated"`
-	SubService     bool                `yaml:"subservice"`
-	Count          int                 `yaml:"count"`
-	Cwd            string              `yaml:"cwd"`
-	Command        string              `yaml:"command"`
-	Hooks          map[string][]string `yaml:"hooks"`
-	Environs       map[string]string   `yaml:"environs"`
+// Config is a struct represents GoPM YAML parser.
+type Config struct {
+	services map[string]*service
 }
 
-func (service *service) withOsEnvirons() []string {
-	environs := os.Environ()
-	for key, val := range service.Environs {
-		environs = append(environs, fmt.Sprintf("%s=%s", key, val))
+// GetConfig is a function that returns a `Config` struct
+// of the given filePath.
+func GetConfig(filePath string) (*Config, error) {
+	services, err := parseConfigFile(filePath)
+	if err != nil {
+		return nil, err
 	}
-	return environs
+	return &Config{services}, nil
 }
 
-func (service *service) expandedEnv() string {
-	return os.ExpandEnv(os.Expand(service.Cwd, func(key string) string {
-		if env, found := service.Environs[key]; found {
-			return env
-		}
-		return fmt.Sprintf("${%s}", key)
-	}))
-}
-
-func (service *service) parsedCommand() (*syntax.File, error) {
-	cmd, err := syntax.NewParser().Parse(strings.NewReader(service.Command), "")
-	return cmd, err
-}
+//========================================================
 
 func parseConfigFile(filePath string) (map[string]*service, error) {
 	file, err := os.Open(filePath)
@@ -79,4 +64,37 @@ func parseServices(servicesMap interface{}) (map[string]*service, error) {
 		return nil, err
 	}
 	return services, nil
+}
+
+//========================================================
+
+type service struct {
+	ignoreFailures bool                `yaml:"ignore_failures"`
+	subService     bool                `yaml:"sub_service"`
+	cwd            string              `yaml:"cwd"`
+	command        string              `yaml:"command"`
+	hooks          map[string][]string `yaml:"hooks"`
+	environs       map[string]string   `yaml:"environs"`
+}
+
+func (service *service) withOsEnvirons() []string {
+	environs := os.Environ()
+	for key, val := range service.environs {
+		environs = append(environs, fmt.Sprintf("%s=%s", key, val))
+	}
+	return environs
+}
+
+func (service *service) expandedEnv() string {
+	return os.ExpandEnv(os.Expand(service.cwd, func(key string) string {
+		if env, found := service.environs[key]; found {
+			return env
+		}
+		return fmt.Sprintf("${%s}", key)
+	}))
+}
+
+func (service *service) parsedCommand() (*syntax.File, error) {
+	cmd, err := syntax.NewParser().Parse(strings.NewReader(service.command), "")
+	return cmd, err
 }

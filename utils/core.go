@@ -10,6 +10,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Processor is a struct that represents GoPM single-core processor.
+type Processor struct{ Core core }
+
+// CreateProcessor is a function that creates a processor
+// from the given services config.
+func CreateProcessor(config *Config) *Processor {
+	reg := createRegistry()
+	for name, service := range config.services {
+		reg.register(&process{name: name, service: service})
+	}
+	return &Processor{
+		Core: core{
+			reg:       reg,
+			errors:    make(chan error, reg.len()),
+			terminate: make(chan []string, reg.len()),
+		},
+	}
+}
+
+//===========================
+
 type core struct {
 	reg    *registry
 	logger *logrus.Logger
@@ -19,32 +40,33 @@ type core struct {
 	termination bool
 }
 
-func (core *core) run() error {
+// Run is a fuction that starts the core processes.
+func (core *core) Run() {
 	go core.procsTerminator()
 	go core.errorsHandler()
 
 	var pool sync.WaitGroup
 	for _, proc := range core.reg.listProcsMap(core.reg.ready) {
 		// Skip sub-services from autorun.
-		if proc.Service.SubService {
+		if proc.service.subService {
 			continue
 		}
 		pool.Add(1)
-		go core.runProcess(proc, &pool)
+		go core.start(proc, &pool)
 	}
 	pool.Wait()
-
-	return nil
 }
 
-func (core *core) runProcess(proc *process, pool *sync.WaitGroup) {
-	defer pool.Done()
+//==================================================================
+
+func (core *core) start(proc *process, pool *sync.WaitGroup) {
 	proc.wait()
+	defer pool.Done()
 	core.reg.updateStatus(proc, "running")
 
 	err := proc.start()
-	// Skip services that has `IgnoreFailures` flag.
-	if err != nil && !proc.Service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.Name) {
+	// Skip services that has `ignoreFailures` flag.
+	if err != nil && !proc.service.ignoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
 		core.errors <- err
 	}
 }
@@ -83,6 +105,14 @@ func (core *core) terminateNames(names []string) {
 		case "stopped":
 			continue
 		}
+	}
+}
+
+func (core *core) shutdown() {
+	core.logger.Warn("[Gracefully shutdown GoPM]")
+	core.termination = true
+	for _, process := range core.reg.getProcesses() {
+		core.stop(process)
 	}
 }
 

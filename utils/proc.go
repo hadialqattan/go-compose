@@ -16,46 +16,46 @@ import (
 )
 
 type process struct {
-	Name    string
-	Service service
-	Logger  *logrus.Entry
-	Cancel  context.CancelFunc
-	Done    chan struct{}
+	name    string
+	service *service
+	logger  *logrus.Entry
+	cancel  context.CancelFunc
+	done    chan struct{}
 }
 
 func (proc *process) wait() {
-	for len(proc.Service.Hooks["wait"]) != 0 {
+	for len(proc.service.hooks["wait"]) != 0 {
 		time.Sleep(time.Second)
 	}
 }
 
 func (proc *process) update(status map[string][]string) {
 	for _, procName := range status["stopped"] {
-		for i, name := range proc.Service.Hooks["wait"] {
+		for i, name := range proc.service.hooks["wait"] {
 			if name == procName {
-				proc.Service.Hooks["wait"] = remove(proc.Service.Hooks["wait"], i)
+				proc.service.hooks["wait"] = remove(proc.service.hooks["wait"], i)
 			}
 		}
 	}
 }
 
 func (proc *process) start() error {
-	environs := proc.Service.withOsEnvirons()
-	cwd := proc.Service.expandedEnv()
+	environs := proc.service.withOsEnvirons()
+	cwd := proc.service.expandedEnv()
 
-	command, err := proc.Service.parsedCommand()
+	command, err := proc.service.parsedCommand()
 	if err != nil {
 		return err
 	}
 
 	logout := &logger{
-		proc.Logger.WithField("prefix", proc.Name).WriterLevel(logrus.InfoLevel),
+		proc.logger.WithField("prefix", proc.name).WriterLevel(logrus.InfoLevel),
 	}
 	logerr := &logger{
-		proc.Logger.WithField("prefix", proc.Name).WriterLevel(logrus.WarnLevel),
+		proc.logger.WithField("prefix", proc.name).WriterLevel(logrus.WarnLevel),
 	}
 
-	bash, err := interp.New(
+	shell, err := interp.New(
 		interp.Dir(cwd),
 		interp.Env(expand.ListEnviron(environs...)),
 		interp.OpenHandler(func(ctx context.Context, path string, flag int, permission os.FileMode) (io.ReadWriteCloser, error) {
@@ -68,14 +68,14 @@ func (proc *process) start() error {
 	}
 
 	ctx := context.Background()
-	ctx, proc.Cancel = context.WithCancel(ctx)
-	return bash.Run(ctx, command)
+	ctx, proc.cancel = context.WithCancel(ctx)
+	return shell.Run(ctx, command)
 }
 
 func (proc *process) stop() {
-	if proc.Cancel != nil {
-		proc.Cancel()
-		proc.Logger.WithField("prefix", proc.Name).Warn("stopped by GoPM")
+	if proc.cancel != nil {
+		proc.cancel()
+		proc.logger.WithField("prefix", proc.name).Warn("stopped by GoPM")
 	}
 }
 

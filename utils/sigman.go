@@ -4,6 +4,20 @@ Signals management utility (ready, running, stopped).
 
 package utils
 
+import (
+	"os"
+	"os/signal"
+)
+
+// ShutdownSignalObserver is a function that observes a shutdown signal.
+func ShutdownSignalObserver(core *core) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() { <-signals; core.shutdown() }()
+}
+
+//===========================================
+
 type sensor interface {
 	notify(status map[string][]string)
 }
