@@ -29,6 +29,7 @@ func createRegistry() *registry {
 		running:      map[string]*process{},
 		stopped:      map[string]*process{},
 		permitToKill: goset.NewSet(),
+		logger:       logrus.New(),
 	}
 }
 
@@ -39,7 +40,7 @@ func (reg *registry) register(proc *process) {
 	defer reg.Unlock()
 
 	reg.ready[proc.name] = proc
-	for _, procName := range proc.service.hooks["kill"] {
+	for _, procName := range proc.service.Hooks["kill"] {
 		reg.permitToKill.Add(procName)
 	}
 }

@@ -24,16 +24,16 @@ type process struct {
 }
 
 func (proc *process) wait() {
-	for len(proc.service.hooks["wait"]) != 0 {
+	for len(proc.service.Hooks["wait"]) != 0 {
 		time.Sleep(time.Second)
 	}
 }
 
 func (proc *process) update(status map[string][]string) {
 	for _, procName := range status["stopped"] {
-		for i, name := range proc.service.hooks["wait"] {
+		for i, name := range proc.service.Hooks["wait"] {
 			if name == procName {
-				proc.service.hooks["wait"] = remove(proc.service.hooks["wait"], i)
+				proc.service.Hooks["wait"] = remove(proc.service.Hooks["wait"], i)
 			}
 		}
 	}

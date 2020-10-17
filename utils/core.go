@@ -18,11 +18,13 @@ type Processor struct{ Core core }
 func CreateProcessor(config *Config) *Processor {
 	reg := createRegistry()
 	for name, service := range config.services {
-		reg.register(&process{name: name, service: service})
+		reg.register(&process{name: name, service: service, logger: logrus.NewEntry(reg.logger)})
 	}
+
 	return &Processor{
 		Core: core{
 			reg:       reg,
+			logger:    reg.logger,
 			errors:    make(chan error, reg.len()),
 			terminate: make(chan []string, reg.len()),
 		},
@@ -48,7 +50,7 @@ func (core *core) Run() {
 	var pool sync.WaitGroup
 	for _, proc := range core.reg.listProcsMap(core.reg.ready) {
 		// Skip sub-services from autorun.
-		if proc.service.subService {
+		if proc.service.SubService {
 			continue
 		}
 		pool.Add(1)
@@ -65,8 +67,8 @@ func (core *core) start(proc *process, pool *sync.WaitGroup) {
 	core.reg.updateStatus(proc, "running")
 
 	err := proc.start()
-	// Skip services that has `ignoreFailures` flag.
-	if err != nil && !proc.service.ignoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
+	// Skip services that has `IgnoreFailures` flag.
+	if err != nil && !proc.service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
 		core.errors <- err
 	}
 }

@@ -26,6 +26,7 @@ func GetConfig(filePath string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Config{services}, nil
 }
 
@@ -69,25 +70,25 @@ func parseServices(servicesMap interface{}) (map[string]*service, error) {
 //========================================================
 
 type service struct {
-	ignoreFailures bool                `yaml:"ignore_failures"`
-	subService     bool                `yaml:"sub_service"`
-	cwd            string              `yaml:"cwd"`
-	command        string              `yaml:"command"`
-	hooks          map[string][]string `yaml:"hooks"`
-	environs       map[string]string   `yaml:"environs"`
+	IgnoreFailures bool                `yaml:"ignore_failures"`
+	SubService     bool                `yaml:"sub_service"`
+	Cwd            string              `yaml:"cwd"`
+	Command        string              `yaml:"command"`
+	Hooks          map[string][]string `yaml:"hooks"`
+	Environs       map[string]string   `yaml:"environs"`
 }
 
 func (service *service) withOsEnvirons() []string {
 	environs := os.Environ()
-	for key, val := range service.environs {
+	for key, val := range service.Environs {
 		environs = append(environs, fmt.Sprintf("%s=%s", key, val))
 	}
 	return environs
 }
 
 func (service *service) expandedEnv() string {
-	return os.ExpandEnv(os.Expand(service.cwd, func(key string) string {
-		if env, found := service.environs[key]; found {
+	return os.ExpandEnv(os.Expand(service.Cwd, func(key string) string {
+		if env, found := service.Environs[key]; found {
 			return env
 		}
 		return fmt.Sprintf("${%s}", key)
@@ -95,6 +96,6 @@ func (service *service) expandedEnv() string {
 }
 
 func (service *service) parsedCommand() (*syntax.File, error) {
-	cmd, err := syntax.NewParser().Parse(strings.NewReader(service.command), "")
+	cmd, err := syntax.NewParser().Parse(strings.NewReader(service.Command), "")
 	return cmd, err
 }
