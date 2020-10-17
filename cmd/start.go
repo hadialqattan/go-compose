@@ -24,22 +24,26 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/hadialqattan/gopm/utils"
 	"github.com/spf13/cobra"
 )
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "A brief description of your command", // TODO add a brief.
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("start called")
+		config, err := utils.GetConfig("./gopm.yaml") // TODO add `-c, --config` flag instead of hardcoding.
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		processor := utils.CreateProcessor(config)
+		utils.ShutdownSignalObserver(&processor.Core)
+		processor.Core.Run()
 	},
 }
 
