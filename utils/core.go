@@ -23,26 +23,30 @@ func (core *core) run() error {
 	go core.procsTerminator()
 	go core.errorsHandler()
 
-	var queue sync.WaitGroup
+	var pool sync.WaitGroup
 	for _, proc := range core.reg.listProcsMap(core.reg.ready) {
-		if !proc.Service.SubService {
-			queue.Add(1)
-			go func(proc *process) {
-				defer queue.Done()
-				proc.wait()
-				core.reg.updateStatus(proc, "running")
-				err := proc.start()
-				if err != nil && !proc.Service.IgnoreFailures {
-					if !core.reg.isPermittedToBeKilled(proc.Name) {
-						core.errors <- err
-					}
-				}
-			}(proc)
+		// Skip sub-services from autorun.
+		if proc.Service.SubService {
+			continue
 		}
+		pool.Add(1)
+		go core.runProcess(proc, &pool)
 	}
-	queue.Wait()
+	pool.Wait()
 
 	return nil
+}
+
+func (core *core) runProcess(proc *process, pool *sync.WaitGroup) {
+	defer pool.Done()
+	proc.wait()
+	core.reg.updateStatus(proc, "running")
+
+	err := proc.start()
+	// Skip services that has `IgnoreFailures` flag.
+	if err != nil && !proc.Service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.Name) {
+		core.errors <- err
+	}
 }
 
 func (core *core) errorsHandler() {
