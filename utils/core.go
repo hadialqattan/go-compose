@@ -6,6 +6,7 @@ package utils
 
 import (
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -64,13 +65,19 @@ func (core *core) Run() {
 func (core *core) start(proc *process, pool *sync.WaitGroup) {
 	proc.wait()
 	defer pool.Done()
+
 	core.reg.updateStatus(proc, "running")
+	defer func() {
+		core.reg.updateStatus(proc, "stopped")
+		proc.logger.WithField("prefix", proc.name).Infof("stopped")
+	}()
 
 	err := proc.start()
 	// Skip services that has `IgnoreFailures` flag.
 	if err != nil && !proc.service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
 		core.errors <- err
 	}
+	time.Sleep(time.Second / 10)
 }
 
 func (core *core) errorsHandler() {
@@ -111,7 +118,7 @@ func (core *core) terminateNames(names []string) {
 }
 
 func (core *core) shutdown() {
-	core.logger.Warn("[Gracefully shutdown GoPM]")
+	core.logger.Warn("Gracefully shutdown GoPM")
 	core.termination = true
 	for _, process := range core.reg.getProcesses() {
 		core.stop(process)
