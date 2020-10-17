@@ -17,7 +17,7 @@ import (
 
 type process struct {
 	Name    string
-	Service Service
+	Service service
 	Logger  *logrus.Entry
 	Cancel  context.CancelFunc
 	Done    chan struct{}
