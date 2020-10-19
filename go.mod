@@ -3,6 +3,7 @@ module github.com/hadialqattan/gopm
 go 1.15
 
 require (
+	github.com/antonfisher/nested-logrus-formatter v1.3.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.7.0

@@ -7,6 +7,7 @@ package utils
 import (
 	"io"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,9 +21,10 @@ func (log *logger) Write(msg []byte) (int, error) {
 
 func newCustomLogger() *logrus.Logger {
 	logger := logrus.New()
-	customFormatter := new(logrus.TextFormatter)
-	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
-	customFormatter.FullTimestamp = true
-	logger.SetFormatter(customFormatter)
+	logger.SetFormatter(&nested.Formatter{
+		HideKeys:        true,
+		FieldsOrder:     []string{"prefix"},
+		TimestampFormat: "2006-01-02 15:04:05.00",
+	})
 	return logger
 }
