@@ -41,35 +41,40 @@ type core struct {
 	errors      chan error
 	terminate   chan []string
 	termination bool
+	pool        sync.WaitGroup
 }
 
 // Run is a fuction that starts the core processes.
 func (core *core) Run() {
 	go core.procsTerminator()
 	go core.errorsHandler()
-
-	var pool sync.WaitGroup
-	for _, proc := range core.reg.listProcsMap(core.reg.ready) {
-		// Skip sub-services from autorun.
-		if proc.service.SubService {
-			continue
-		}
-		pool.Add(1)
-		go core.start(proc, &pool)
-	}
-	pool.Wait()
+	core.runProcesses(core.reg.listProcsMap(core.reg.ready))
+	core.pool.Wait()
 }
 
 //==================================================================
 
-func (core *core) start(proc *process, pool *sync.WaitGroup) {
-	proc.wait()
-	defer pool.Done()
+func (core *core) runProcesses(procs []*process) {
+	for _, proc := range procs {
+		core.pool.Add(1)
+		go core.start(proc)
+	}
+}
 
+func (core *core) start(proc *process) {
+	defer core.pool.Done()
+
+	// Skip sub-services from autorun.
+	if proc.service.SubService {
+		return
+	}
+
+	proc.waitHook()
 	core.reg.updateStatus(proc, "running")
 	defer func() {
 		core.reg.updateStatus(proc, "stopped")
-		proc.logger.WithField("prefix", proc.name).Infof("stopped")
+		proc.startHook(core)
+		proc.stopHook(core)
 	}()
 
 	err := proc.start()
@@ -88,7 +93,7 @@ func (core *core) errorsHandler() {
 			}
 			core.termination = true
 
-			core.logger.WithField("prefix", "core").Errorf("%s ; %#v", err.Error(), err)
+			core.logger.WithField("prefix", "core").Errorf("%s -> %#v", err.Error(), err)
 			for _, proc := range core.reg.listProcsMap(core.reg.running) {
 				core.stop(proc)
 			}
@@ -104,7 +109,6 @@ func (core *core) procsTerminator() {
 
 func (core *core) terminateNames(names []string) {
 	for _, name := range names {
-		core.logger.WithField("prefix", "core").Warn(name)
 		proc, status := core.reg.getProcess(name)
 		switch status {
 		case "ready":
@@ -118,7 +122,7 @@ func (core *core) terminateNames(names []string) {
 }
 
 func (core *core) shutdown() {
-	core.logger.Warn("Gracefully shutdown GoPM")
+	core.logger.WithField("prefix", "core").Warn("Gracefully shutdown GoPM")
 	core.termination = true
 	for _, process := range core.reg.getProcesses() {
 		core.stop(process)

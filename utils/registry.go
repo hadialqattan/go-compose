@@ -49,11 +49,17 @@ func (reg *registry) updateStatus(proc *process, status string) {
 	reg.Lock()
 	switch status {
 	case "running":
-		delete(reg.ready, proc.name)
-		reg.running[proc.name] = proc
+		if _, find := reg.ready[proc.name]; find {
+			delete(reg.ready, proc.name)
+			reg.running[proc.name] = proc
+			reg.logger.WithField("prefix", proc.name).Info("running")
+		}
 	case "stopped":
-		delete(reg.running, proc.name)
-		reg.stopped[proc.name] = proc
+		if _, find := reg.running[proc.name]; find {
+			delete(reg.running, proc.name)
+			reg.stopped[proc.name] = proc
+			reg.logger.WithField("prefix", proc.name).Info("stopped")
+		}
 	default:
 		panic("WTF are you doing?! Unknown process!")
 	}

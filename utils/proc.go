@@ -23,10 +23,32 @@ type process struct {
 	done    chan struct{}
 }
 
-func (proc *process) wait() {
+func (proc *process) waitHook() {
 	for len(proc.service.Hooks["wait"]) != 0 {
 		time.Sleep(time.Second)
 	}
+}
+
+func (proc *process) startHook(core *core) {
+	var procs []*process
+	for _, name := range proc.service.Hooks["start"] {
+		proc, _ = core.reg.getProcess(name)
+		if err := recover(); err != nil {
+			core.logger.WithField("prefix", proc.name).Warn("cannot find", name, "service!")
+			continue
+		}
+		proc.service.SubService = false
+		procs = append(procs, proc)
+	}
+	core.runProcesses(procs)
+}
+
+func (proc *process) stopHook(core *core) {
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+	core.terminateNames(proc.service.Hooks["stop"])
 }
 
 func (proc *process) update(status map[string][]string) {
@@ -75,7 +97,6 @@ func (proc *process) start() error {
 func (proc *process) stop() {
 	if proc.cancel != nil {
 		proc.cancel()
-		proc.logger.WithField("prefix", proc.name).Warn("stopped by GoPM")
 	}
 }
 

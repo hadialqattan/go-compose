@@ -50,6 +50,12 @@ func parseConfigFile(filePath string) (map[string]*service, error) {
 		return nil, err
 	}
 
+	if raw["services"] == nil {
+		logger := newCustomLogger()
+		logger.WithField("prefix", "GoPM").Error("No service provided. Nothing to do 😴")
+		os.Exit(1)
+	}
+
 	return parseServices(raw["services"])
 }
 
