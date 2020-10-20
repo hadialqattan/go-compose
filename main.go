@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 package main
 
-import "github.com/hadialqattan/gopm/cmd"
+import "github.com/hadialqattan/go-compose/cmd"
 
 func main() {
 	cmd.Execute()
