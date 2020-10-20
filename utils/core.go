@@ -126,7 +126,7 @@ func (core *core) terminateNames(names []string) {
 }
 
 func (core *core) shutdown() {
-	core.logger.WithField("prefix", "core").Warn("Gracefully shutdown Go-compose")
+	core.logger.WithField("prefix", "core").Warn("Gracefully shutdown go-compose")
 	core.termination = true
 	for _, process := range core.reg.getProcesses() {
 		core.stop(process)

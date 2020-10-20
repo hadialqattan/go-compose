@@ -52,7 +52,7 @@ func parseConfigFile(filePath string) (map[string]*service, error) {
 
 	if raw["services"] == nil {
 		logger := newCustomLogger()
-		logger.WithField("prefix", "Go-compose").Error("No service provided. Nothing to do 😴")
+		logger.WithField("prefix", "go-compose").Error("No service provided. Nothing to do 😴")
 		os.Exit(1)
 	}
 
