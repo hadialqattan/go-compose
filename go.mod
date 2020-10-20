@@ -1,4 +1,4 @@
-module github.com/hadialqattan/gopm
+module github.com/hadialqattan/go-compose
 
 go 1.15
 

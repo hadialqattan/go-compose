@@ -14,7 +14,7 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
-// Config is a struct represents GoPM YAML parser.
+// Config is a struct represents Go-compose YAML parser.
 type Config struct {
 	services map[string]*service
 }
@@ -52,7 +52,7 @@ func parseConfigFile(filePath string) (map[string]*service, error) {
 
 	if raw["services"] == nil {
 		logger := newCustomLogger()
-		logger.WithField("prefix", "GoPM").Error("No service provided. Nothing to do 😴")
+		logger.WithField("prefix", "Go-compose").Error("No service provided. Nothing to do 😴")
 		os.Exit(1)
 	}
 

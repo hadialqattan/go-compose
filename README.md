@@ -1,2 +1,2 @@
-# gopm
-A lightweight process manager (in develop).
+# Go-compose
+A lightweight services composer (in develop).

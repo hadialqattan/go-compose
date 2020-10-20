@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Processor is a struct that represents GoPM single-core processor.
+// Processor is a struct that represents Go-compose single-core processor.
 type Processor struct{ Core core }
 
 // CreateProcessor is a function that creates a processor
@@ -82,7 +82,7 @@ func (core *core) start(proc *process) {
 	if err != nil && !proc.service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
 		core.errors <- err
 		if proc.service.AutoRestart {
-			core.logger.WithField("prefix", "GoPM").Info("Rerun: ", proc.name)
+			core.logger.WithField("prefix", "core").Info("Rerun: ", proc.name)
 			core.runProcesses([]*process{proc})
 		}
 	}
@@ -126,7 +126,7 @@ func (core *core) terminateNames(names []string) {
 }
 
 func (core *core) shutdown() {
-	core.logger.WithField("prefix", "core").Warn("Gracefully shutdown GoPM")
+	core.logger.WithField("prefix", "core").Warn("Gracefully shutdown Go-compose")
 	core.termination = true
 	for _, process := range core.reg.getProcesses() {
 		core.stop(process)

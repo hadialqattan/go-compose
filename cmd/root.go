@@ -1,5 +1,5 @@
 /*
-Root GoPM CMD.
+Root Go-compose CMD.
 */
 
 package cmd
@@ -16,8 +16,8 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "gopm",
-	Short: "A lightweight process manager",
+	Use:   "go-compose",
+	Short: "A lightweight services composer",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -32,7 +32,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./gopm.yaml", "config file")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./go-compose.yaml", "config file")
 }
 
 // initConfig reads in config file and ENV variables if set.
