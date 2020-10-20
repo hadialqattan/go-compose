@@ -81,6 +81,10 @@ func (core *core) start(proc *process) {
 	// Skip services that has `IgnoreFailures` flag.
 	if err != nil && !proc.service.IgnoreFailures && !core.reg.isPermittedToBeKilled(proc.name) {
 		core.errors <- err
+		if proc.service.AutoRerun {
+			core.logger.WithField("prefix", "GoPM").Info("Rerun: ", proc.name)
+			core.runProcesses([]*process{proc})
+		}
 	}
 	time.Sleep(time.Second / 10)
 }

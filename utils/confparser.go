@@ -78,6 +78,7 @@ func parseServices(servicesMap interface{}) (map[string]*service, error) {
 type service struct {
 	IgnoreFailures bool                `yaml:"ignore_failures"`
 	SubService     bool                `yaml:"sub_service"`
+	AutoRerun      bool                `yaml:"auto_rerun"`
 	Cwd            string              `yaml:"cwd"`
 	Command        string              `yaml:"command"`
 	Hooks          map[string][]string `yaml:"hooks"`
