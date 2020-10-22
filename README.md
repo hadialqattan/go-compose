@@ -8,18 +8,9 @@ A lightweight services composer written in Golang for managing services (process
 ***
 ## Installation
 
-- Using `go get`: 
-    ```bash
-    go get github.com/hadialqattan/go-compose
-    mv $GOPATH/bin/go-compose /usr/local/bin
-    ```
-
-- Build from the source:
-    ```bash
-    git clone https://github.com/hadialqattan/go-compose.git
-    cd go-compose/
-    ./scripts/install.sh # may needs root privileges.
-    ```
+```bash
+$ go get github.com/hadialqattan/go-compose
+```
 
 ## Usage
 
