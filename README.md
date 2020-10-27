@@ -52,7 +52,8 @@ services:
 * `command`: a unix shell command.
 * `environs`: environment variables.
 
-A real world example:
+<details>
+    <summary> A real world example </summary>
 
 ```yaml
 services:
@@ -93,6 +94,8 @@ services:
     cwd: .
     command: python3 teardown.py
 ```
+
+</details>
 
 ***
 ## Copyright ©
