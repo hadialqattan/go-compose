@@ -1,7 +1,8 @@
 # Go Compose
-![Build](https://github.com/hadialqattan/go-compose/workflows/Build/badge.svg?branch=main)
-![LICENSE](https://img.shields.io/badge/License-MIT-darkgreen.svg)
 
+<p align="center">
+  <img src="docs/carbon.png" alt="go-compose carbon image">
+</p>
 
 A lightweight services composer written in Golang for managing services (processes) in a development environment.
 
